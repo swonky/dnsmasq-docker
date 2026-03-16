@@ -42,8 +42,8 @@ target "dnsmasq-minimal" {
   }
 
   tags = [
-    "dnsmasq:${VERSION}-minimal",
-    "dnsmasq:minimal"
+    "ghcr.io/swonky/dnsmasq:${VERSION}-minimal",
+    "ghcr.io/swonky/dnsmasq:minimal"
   ]
 }
 
