@@ -10,6 +10,10 @@ variable "CHECKSUM" {
   default = "sha256:2d26a048df452b3cfa7ba05efbbcdb19b12fe7a0388761eb5d00938624bd76c8"
 }
 
+variable "REGISTRY" {
+  default = "ghcr.io/swonky"
+}
+
 group "default" {
   targets = ["dnsmasq", "dnsmasq-minimal"]
 }
@@ -25,8 +29,8 @@ target "dnsmasq" {
   }
 
   tags = [
-    "dnsmasq:${VERSION}",
-    "dnsmasq:latest"
+    "${REGISTRY}/dnsmasq:${VERSION}",
+    "${REGISTRY}/dnsmasq:latest"
   ]
 }
 
@@ -42,8 +46,8 @@ target "dnsmasq-minimal" {
   }
 
   tags = [
-    "ghcr.io/swonky/dnsmasq:${VERSION}-minimal",
-    "ghcr.io/swonky/dnsmasq:minimal"
+    "${REGISTRY}/dnsmasq:${VERSION}-minimal",
+    "${REGISTRY}/dnsmasq:minimal"
   ]
 }
 
