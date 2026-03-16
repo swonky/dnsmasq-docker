@@ -1,0 +1,9 @@
+name: taildns
+
+
+services:
+  dnsmasq:
+    image: dnsmasq:2.91-minimal
+    restart: unless-stopped
+    container_name: dnsmasq
+    cap_add: [NET_ADMIN]
