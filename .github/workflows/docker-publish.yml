@@ -48,6 +48,6 @@ jobs:
       - name: Sign published images
         if: github.event_name != 'pull_request'
         run: |
-          docker buildx imagetools inspect ghcr.io/${{ github.repository }}:latest >/dev/null
-          cosign sign --yes ghcr.io/${{ github.repository }}:latest
-          cosign sign --yes ghcr.io/${{ github.repository }}:minimal
+          docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/dnsmasq:latest >/dev/null
+          cosign sign --yes ghcr.io/${{ github.repository_owner }}/dnsmasq:latest
+          cosign sign --yes ghcr.io/${{ github.repository_owner }}/dnsmasq:minimal
