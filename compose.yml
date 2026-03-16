@@ -1,9 +1,14 @@
-name: taildns
-
+name: dnsmasq
 
 services:
   dnsmasq:
-    image: dnsmasq:2.91-minimal
+    image: ghcr.io/swonky/dnsmasq:2.91-minimal
+    user: 1000:1000
+    environment:
+      DNSMASQ_CONF_FILE: /etc/dnsmasq.conf   
+    volumes:
+      - "./dnsmasq.conf:/etc/dnsmasq.conf"
+    ports:
+      - "127.0.0.1:53:53"
+    cap_add: [ NET_ADMIN ]
     restart: unless-stopped
-    container_name: dnsmasq
-    cap_add: [NET_ADMIN]
