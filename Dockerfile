@@ -18,17 +18,17 @@ ADD --link --unpack --checksum=${CHECKSUM} \
 
 WORKDIR /build/dnsmasq-${VERSION}
 
-RUN make COPTS="$COPTS" \
+RUN make \
+  COPTS="$COPTS" \
   LDFLAGS="-s"
 
 # ----
 
-FROM golang:1.23-alpine AS build-init
+FROM golang:1.24-alpine AS build-init
 
 WORKDIR /build
 
-COPY init/go.mod ./
-COPY init/main.go .
+COPY init/* ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o dnsmasq-init .
 
@@ -52,14 +52,15 @@ COPY --from=build-init /build/dnsmasq-init /dnsmasq-init
 
 EXPOSE 53/tcp
 EXPOSE 53/udp
+EXPOSE 9153
 
-ENV DNSMASQ_KEEP_IN_FOREGROUND=TRUE
-ENV DNSMASQ_LOG_FACILITY="-"
-ENV DNSMASQ_CONF_FILE="/etc/dnsmasq.conf"
-ENV DNSMASQ_DOMAIN_NEEDED=TRUE
-ENV DNSMASQ_BOGUS_PRIV=TRUE
-ENV DNSMASQ_STOP_DNS_REBIND=TRUE
-ENV DNSMASQ_NO_DAEMON=TRUE
+ENV DNSMASQ_KEEP_IN_FOREGROUND=TRUE \
+  DNSMASQ_LOG_FACILITY="-" \
+  DNSMASQ_CONF_FILE="/etc/dnsmasq.conf" \
+  DNSMASQ_DOMAIN_NEEDED=TRUE \
+  DNSMASQ_BOGUS_PRIV=TRUE \
+  DNSMASQ_STOP_DNS_REBIND=TRUE \
+  DNSMASQ_NO_DAEMON=TRUE
 
 STOPSIGNAL SIGTERM
 

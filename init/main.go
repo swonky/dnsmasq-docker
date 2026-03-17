@@ -1,18 +1,36 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"iter"
-	"log"
+	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"sort"
 	"strings"
 	"syscall"
+	"time"
+
+	"github.com/google/dnsmasq_exporter/collector"
+	"github.com/miekg/dns"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog"
 )
 
 const (
 	prefix     = "DNSMASQ_"
 	dnsmasqBin = "dnsmasq"
+
+	exporterListenEnv = "DNSMASQ_INIT_EXPORTER_LISTEN"
+	exporterAddrEnv   = "DNSMASQ_INIT_EXPORTER_DNSMASQ_ADDR"
+	leasesPathEnv     = "DNSMASQ_INIT_LEASES_PATH"
+
+	defaultExporterListen = ":9153"
+	defaultDnsmasqAddr    = "localhost:53"
+	defaultLeasesPath     = "/var/lib/misc/dnsmasq.leases"
 )
 
 // convertToOption converts a DNSMASQ_-prefixed environment variable name into
@@ -68,22 +86,76 @@ func formatArgument(key, value string) string {
 	return key + "=" + value
 }
 
-// logArguments writes the resolved dnsmasq arguments to stderr in a compact,
-// human-readable format, one flag per line, sorted for deterministic output.
-func logArguments(args []string) {
-	log.Printf("starting dnsmasq with %d option(s):", len(args))
+// logArguments writes the resolved dnsmasq arguments to the provided logger,
+// one flag per line.
+func logArguments(log zerolog.Logger, args []string) {
+	e := log.Info().Int("count", len(args))
 	for _, arg := range args {
-		log.Printf("  %s", arg)
+		e = e.Str("arg", arg)
 	}
+	e.Msg("starting dnsmasq")
+}
+
+// envOr returns the value of the named environment variable, or def if unset
+// or empty.
+func envOr(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
+}
+
+// startExporter registers a dnsmasq Prometheus collector and starts an HTTP
+// server on listenAddr exposing /metrics. The server shuts down gracefully
+// when ctx is cancelled.
+func startExporter(ctx context.Context, log zerolog.Logger, listenAddr, dnsmasqAddr, leasesPath string) {
+	c := collector.New(collector.Config{
+		DnsClient:    &dns.Client{},
+		DnsmasqAddr:  dnsmasqAddr,
+		LeasesPath:   leasesPath,
+		ExposeLeases: false,
+	})
+
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(c)
+
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+
+	srv := &http.Server{
+		Addr:    listenAddr,
+		Handler: mux,
+	}
+
+	go func() {
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		srv.Shutdown(shutdownCtx)
+	}()
+
+	go func() {
+		log.Info().Str("addr", listenAddr).Msg("exporter listening")
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error().Err(err).Msg("exporter error")
+		}
+	}()
+}
+
+func initLogger() zerolog.Logger {
+	return zerolog.New(os.Stderr).
+		With().
+		Timestamp().
+		Str("component", "dnsmasq-init").
+		Logger()
 }
 
 func main() {
-	log.SetPrefix("[dnsmasq-init] ")
-	log.SetFlags(0)
+	logger := initLogger()
 
 	bin, err := exec.LookPath(dnsmasqBin)
 	if err != nil {
-		log.Fatalf("could not find dnsmasq binary: %v", err)
+		logger.Fatal().Err(err).Msg("could not find dnsmasq binary")
 	}
 
 	args := make([]string, 0)
@@ -91,13 +163,43 @@ func main() {
 		args = append(args, formatArgument(k, v))
 	}
 	sort.Strings(args)
+	logArguments(logger, args)
 
-	logArguments(args)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	// Replace the current process with dnsmasq. argv[0] must be the binary
-	// path itself, followed by the actual arguments.
-	argv := append([]string{bin}, args...)
-	if err := syscall.Exec(bin, argv, os.Environ()); err != nil {
-		log.Fatalf("exec failed: %v", err)
+	startExporter(
+		ctx,
+		logger.With().Str("component", "exporter").Logger(),
+		envOr(exporterListenEnv, defaultExporterListen),
+		envOr(exporterAddrEnv, defaultDnsmasqAddr),
+		envOr(leasesPathEnv, defaultLeasesPath),
+	)
+
+	cmd := exec.Command(bin, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	if err := cmd.Start(); err != nil {
+		logger.Fatal().Err(err).Msg("failed to start dnsmasq")
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		s := <-sig
+		logger.Info().Str("signal", s.String()).Msg("forwarding signal to dnsmasq")
+		cmd.Process.Signal(s)
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			logger.Error().Int("code", exitErr.ExitCode()).Msg("dnsmasq exited with error")
+			os.Exit(exitErr.ExitCode())
+		}
+		logger.Fatal().Err(err).Msg("dnsmasq exited unexpectedly")
 	}
 }
