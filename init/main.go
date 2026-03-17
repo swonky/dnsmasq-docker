@@ -190,16 +190,25 @@ func main() {
 
 	go func() {
 		s := <-sig
-		logger.Info().Str("signal", s.String()).Msg("forwarding signal to dnsmasq")
+		logger.
+			Info().
+			Str("signal", s.String()).
+			Msg("forwarding signal to dnsmasq")
 		cmd.Process.Signal(s)
 	}()
 
 	if err := cmd.Wait(); err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			logger.Error().Int("code", exitErr.ExitCode()).Msg("dnsmasq exited with error")
+			logger.
+				Error().
+				Int("code", exitErr.ExitCode()).
+				Msg("dnsmasq exited with error")
 			os.Exit(exitErr.ExitCode())
 		}
-		logger.Fatal().Err(err).Msg("dnsmasq exited unexpectedly")
+		logger.
+			Fatal().
+			Err(err).
+			Msg("dnsmasq exited unexpectedly")
 	}
 }
