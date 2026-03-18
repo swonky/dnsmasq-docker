@@ -44,9 +44,8 @@ jobs:
 
       - name: Build images using bake
         run: |
-          docker buildx bake \
+          VERSION=${VERSION} docker buildx bake \
             --file "docker-bake.hcl" \
-            --set "*.arg.VERSION=${VERSION}" \
             $([[ "${{ github.event_name }}" != "pull_request" ]] && echo "--push")
 
       - name: Sign published images
