@@ -14,6 +14,10 @@ variable "REGISTRY" {
   default = "ghcr.io/swonky"
 }
 
+variable "AUTHOR" {
+  default = "swonky"
+}
+
 variable "DESCRIPTION" {
   default = join(" ", [
     "dnsmasq packaged as a minimal, production-ready container with",
@@ -32,6 +36,7 @@ target "dnsmasq" {
   dockerfile = "Dockerfile"
   
   annotations = [
+    "org.opencontainers.image.author=${AUTHOR}"
     "org.opencontainers.image.description=${DESCRIPTION}"
   ]
 
@@ -47,8 +52,6 @@ target "dnsmasq" {
     "${REGISTRY}/dnsmasq:latest"
   ]
 }
-
-#
 # target "dnsmasq-minimal" {
 #   context = "."
 #   dockerfile = "Dockerfile"
