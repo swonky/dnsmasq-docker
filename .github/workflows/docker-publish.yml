@@ -10,9 +10,9 @@ on:
     branches: ["main"]
 
 env:
-  DESCRIPTION: >
+  DESCRIPTION: >-
     dnsmasq packaged as a minimal, production-ready container with integrated Prometheus metrics export. 
-    Provides DNS forwarding, caching, and DHCP services with structured logging suitable for monitoring pipelines."
+    Provides DNS forwarding, caching, and DHCP services with structured logging suitable for monitoring pipelines.
 
 jobs:
   build:
