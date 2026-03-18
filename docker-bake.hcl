@@ -14,7 +14,7 @@ variable "REGISTRY" {
   default = "ghcr.io/swonky"
 }
 
-variable "AUTHOR" {
+variable "AUTHORS" {
   default = "swonky"
 }
 
@@ -38,7 +38,7 @@ target "dnsmasq" {
   platforms = ["linux/amd64"]
 
   annotations = [
-    "org.opencontainers.image.author=${AUTHOR}",
+    "org.opencontainers.image.author=${AUTHORS}",
     "org.opencontainers.image.description=${DESCRIPTION}"
   ]
 
@@ -47,6 +47,7 @@ target "dnsmasq" {
     COPTS    = ""
     CHECKSUM = "${CHECKSUM}"
     DESCRIPTION = "${DESCRIPTION}"
+    AUTHORS = "${AUTHORS}"
   }
 
   tags = [
