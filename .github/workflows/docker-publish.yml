@@ -49,7 +49,7 @@ jobs:
           docker buildx bake \
             --file "docker-bake.hcl" \
             --set *.args.DESCRIPTION="${DESCRIPTION}" \
-            --set *.annotations.org.opencontainers.image.description="${DESCRIPTION}" \
+            --set "*.annotations=org.opencontainers.image.description=${DESCRIPTION}" \
             $([[ "${{ github.event_name }}" != "pull_request" ]] && echo "--push")
 
       - name: Sign published images
