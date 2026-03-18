@@ -34,7 +34,9 @@ group "default" {
 target "dnsmasq" {
   context = "."
   dockerfile = "Dockerfile"
-  
+
+  platforms = ["linux/amd64"]
+
   annotations = [
     "org.opencontainers.image.author=${AUTHOR}"
     "org.opencontainers.image.description=${DESCRIPTION}"
