@@ -9,11 +9,6 @@ on:
   pull_request:
     branches: ["main"]
 
-env:
-  DESCRIPTION: >-
-    dnsmasq packaged as a minimal, production-ready container with integrated Prometheus metrics export. 
-    Provides DNS forwarding, caching, and DHCP services with structured logging suitable for monitoring pipelines.
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -48,8 +43,6 @@ jobs:
         run: |
           docker buildx bake \
             --file "docker-bake.hcl" \
-            --set *.args.DESCRIPTION="${DESCRIPTION}" \
-            --set "*.annotations=org.opencontainers.image.description=${DESCRIPTION}" \
             $([[ "${{ github.event_name }}" != "pull_request" ]] && echo "--push")
 
       - name: Sign published images

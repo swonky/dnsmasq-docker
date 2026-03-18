@@ -14,18 +14,32 @@ variable "REGISTRY" {
   default = "ghcr.io/swonky"
 }
 
+variable "DESCRIPTION" {
+  default = join(" ", [
+    "dnsmasq packaged as a minimal, production-ready container with",
+    "integrated Prometheus metrics export. Provides DNS forwarding,",
+    "caching, and DHCP services with structured logging suitable for",
+    "monitoring pipelines."
+  ])
+}
+
 group "default" {
-  targets = ["dnsmasq", "dnsmasq-minimal"]
+  targets = ["dnsmasq" ]
 }
 
 target "dnsmasq" {
   context = "."
   dockerfile = "Dockerfile"
+  
+  annotations = [
+    "org.opencontainers.image.description=${DESCRIPTION}"
+  ]
 
   args = {
     VERSION  = "${VERSION}"
     COPTS    = ""
     CHECKSUM = "${CHECKSUM}"
+    DESCRIPTION = "${DESCRIPTION}"
   }
 
   tags = [
@@ -34,20 +48,20 @@ target "dnsmasq" {
   ]
 }
 
-
-target "dnsmasq-minimal" {
-  context = "."
-  dockerfile = "Dockerfile"
-
-  args = {
-    VERSION  = "${VERSION}"
-    COPTS    = "${COPTS}"
-    CHECKSUM = "${CHECKSUM}"
-  }
-
-  tags = [
-    "${REGISTRY}/dnsmasq:${VERSION}-minimal",
-    "${REGISTRY}/dnsmasq:minimal"
-  ]
-}
+#
+# target "dnsmasq-minimal" {
+#   context = "."
+#   dockerfile = "Dockerfile"
+#
+#   args = {
+#     VERSION  = "${VERSION}"
+#     COPTS    = "${COPTS}"
+#     CHECKSUM = "${CHECKSUM}"
+#   }
+#
+#   tags = [
+#     "${REGISTRY}/dnsmasq:${VERSION}-minimal",
+#     "${REGISTRY}/dnsmasq:minimal"
+#   ]
+# }
 
