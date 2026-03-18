@@ -37,14 +37,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o dnsmasq-init
 FROM alpine:3.20 AS runtime
 
 ARG VERSION
+ARG DESCRIPTION
 
 LABEL org.opencontainers.image.title="dnsmasq" \
-  org.opencontainers.image.description="Minimal dnsmasq container built from source with environment-variable configuration" \
   org.opencontainers.image.url="https://github.com/swonky/dnsmasq-docker" \
   org.opencontainers.image.source="https://github.com/swonky/dnsmasq-docker" \
   org.opencontainers.image.documentation="https://github.com/swonky/dnsmasq-docker/blob/main/README.md" \
   org.opencontainers.image.licenses="GPL-2.0" \
-  org.opencontainers.image.vendor="swonky"
+  org.opencontainers.image.vendor="swonky" \
+  org.opencontainers.image.description="$DESCRIPTION"
 
 COPY --from=build /build/dnsmasq-${VERSION}/src/dnsmasq /usr/sbin/dnsmasq
 COPY --from=build /build/dnsmasq-${VERSION}/dnsmasq.conf.example /etc/dnsmasq.conf
