@@ -1,6 +1,7 @@
 # dnsmasq-docker
 
-A production-ready Docker image for [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html), built from source on Alpine Linux. Provides DNS forwarding, caching, and DHCP services with integrated Prometheus metrics export and structured logging suitable for monitoring pipelines.
+A Docker image for [dnsmasq](https://thekelleys.org.uk/dnsmasq/doc.html), built from source on Alpine Linux. 
+Provides DNS forwarding, caching, and DHCP services with integrated Prometheus metrics export and structured logging suitable for monitoring pipelines.
 
 A small Go init process manages dnsmasq as the container entrypoint.
 
