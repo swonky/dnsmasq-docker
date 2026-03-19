@@ -36,12 +36,12 @@ target "dnsmasq" {
   dockerfile = "Dockerfile"
 
   platforms = ["linux/amd64"]
-
+  
   annotations = [
-    "org.opencontainers.image.authors=${AUTHORS}",
-    "org.opencontainers.image.description=${DESCRIPTION}"
+    "index,manifest:org.opencontainers.image.authors=${AUTHORS}",
+    "index,manifest:org.opencontainers.image.description=${DESCRIPTION}"
   ]
-
+ 
   args = {
     VERSION  = "${VERSION}"
     COPTS    = ""
