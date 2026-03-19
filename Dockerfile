@@ -6,9 +6,9 @@ RUN apk add --no-cache \
   build-base \ 
   linux-headers
 
-ARG VERSION
-ARG COPTS
-ARG CHECKSUM
+ARG VERSION \
+  COPTS \
+  CHECKSUM
 
 WORKDIR /build
 
@@ -36,19 +36,18 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o dnsmasq-init
 
 FROM alpine:3.20 AS runtime
 
-ARG VERSION
+ARG VERSION \
+  AUTHORS \
+  DESCRIPTION
 
-ARG AUTHORS
-ARG DESCRIPTION
-
-LABEL org.opencontainers.image.title="dnsmasq"
-LABEL org.opencontainers.image.url="https://github.com/swonky/dnsmasq-docker"
-LABEL org.opencontainers.image.source="https://github.com/swonky/dnsmasq-docker"
-LABEL org.opencontainers.image.documentation="https://github.com/swonky/dnsmasq-docker/blob/main/README.md"
-LABEL org.opencontainers.image.licenses="GPL-2.0"
-LABEL org.opencontainers.image.vendor="${AUTHORS}"
-LABEL org.opencontainers.image.authors="${AUTHORS}"
-LABEL org.opencontainers.image.description="${DESCRIPTION}"
+LABEL org.opencontainers.image.title="dnsmasq" \
+  org.opencontainers.image.url="https://github.com/swonky/dnsmasq-docker" \
+  org.opencontainers.image.source="https://github.com/swonky/dnsmasq-docker" \
+  org.opencontainers.image.documentation="https://github.com/swonky/dnsmasq-docker/blob/main/README.md" \
+  org.opencontainers.image.licenses="GPL-2.0" \
+  org.opencontainers.image.vendor="${AUTHORS}" \
+  org.opencontainers.image.authors="${AUTHORS}" \
+  org.opencontainers.image.description="${DESCRIPTION}"
 
 COPY --from=build /build/dnsmasq-${VERSION}/src/dnsmasq /usr/sbin/dnsmasq
 COPY --from=build /build/dnsmasq-${VERSION}/dnsmasq.conf.example /etc/dnsmasq.conf
