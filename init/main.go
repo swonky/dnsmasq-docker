@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"slices"
 	"sort"
 	"strings"
 	"syscall"
@@ -21,7 +22,7 @@ import (
 )
 
 const (
-	prefix     = "DNSMASQ_"
+	prefix     = "DNSMASQ_OPTION_"
 	dnsmasqBin = "dnsmasq"
 
 	exporterListenEnv = "DNSMASQ_INIT_EXPORTER_LISTEN"
@@ -33,7 +34,12 @@ const (
 	defaultLeasesPath     = "/var/lib/misc/dnsmasq.leases"
 )
 
-// convertToOption converts a DNSMASQ_-prefixed environment variable name into
+var requiredOptions = []string{
+	"--no-daemon",
+	"--keep-in-foreground",
+}
+
+// convertToOption converts a DNSMASQ_OPTION_-prefixed environment variable name into
 // a dnsmasq CLI flag. The prefix is stripped, underscores are replaced with
 // hyphens, and the result is lowercased and prepended with "--".
 // Example: DNSMASQ_NO_RESOLV → --no-resolv
@@ -142,6 +148,15 @@ func startExporter(ctx context.Context, log zerolog.Logger, listenAddr, dnsmasqA
 	}()
 }
 
+func enforceRequiredOptions(args []string) []string {
+	for _, r := range requiredOptions {
+		if !slices.Contains(args, r) {
+			args = append(args, r)
+		}
+	}
+	return args
+}
+
 func initLogger() zerolog.Logger {
 	return zerolog.New(os.Stderr).
 		With().
@@ -162,6 +177,7 @@ func main() {
 	for k, v := range getEnv(prefix) {
 		args = append(args, formatArgument(k, v))
 	}
+	args = enforceRequiredOptions(args)
 	sort.Strings(args)
 	logArguments(logger, args)
 
