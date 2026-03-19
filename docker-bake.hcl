@@ -38,7 +38,7 @@ target "dnsmasq" {
   platforms = ["linux/amd64"]
 
   annotations = [
-    "org.opencontainers.image.author=${AUTHORS}",
+    "org.opencontainers.image.authors=${AUTHORS}",
     "org.opencontainers.image.description=${DESCRIPTION}"
   ]
 
